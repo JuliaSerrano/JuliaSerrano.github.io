@@ -126,5 +126,5 @@ And have separate configs:
 ```
 
 
-> For more details about git configuration, check: [Getting Started First Time Git Sertup](<https://git-scm.com/book/en/v2/Getting-Started-First-Time-Git-Setup>)
+> For more details about git configuration, check: [Getting Started - First Time Git Setup](<https://git-scm.com/book/en/v2/Getting-Started-First-Time-Git-Setup>)
 {: .prompt-info }
