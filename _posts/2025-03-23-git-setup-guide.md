@@ -2,7 +2,7 @@
 title: Setup multiple git accounts on same machines
 date: 2025-03-23 18:35:00 +0200
 categories: [Guides]
-tags: [Git, Github]
+tags: [Git, Github, Customization]
 ---
 
 ## Introduction
