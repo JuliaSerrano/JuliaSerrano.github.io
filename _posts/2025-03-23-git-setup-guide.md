@@ -1,8 +1,9 @@
 ---
-title: Setup multiple git accounts on same machines
+title: Setup git to work with multiple hosting accounts (GitHub, GitLab, ...) on the same machine
 date: 2025-03-23 18:35:00 +0200
 categories: [Guides]
 tags: [Git, Github, Customization]
+description: Enable as many git hosting platform accounts (GitHub, GitLab, Azure DevOps, ...) as wanted in a single machine. Use custom aliases to distinguish between clients.
 ---
 
 ## Introduction
@@ -10,7 +11,7 @@ Git is an open-source version control system used worldwide. It's really useful 
 
 Because of its extense use, the need to use multiple accounts on a same machine becomes natural.
 
-This guide presents a short an easy way to configure a setup with two (...or more) different Git accounts.
+This guide presents a short an easy way to configure a setup with two (...or more) different hosting accounts.
 
 ## HTTPS vs SSH
 Git authentication can be handled trough HTTPS or SSH protocols.
@@ -20,7 +21,7 @@ The key differences of these technologies are:
 
 | Feature            | HTTPS                                             | SSH     |
 | :--------------------------- | :--------------- | ------: |
-| Authentication| Username + PAT (Personal Access Token)| Uses public and private key pairs. Public key is stored on GitHub, private key stays local. |
+| Authentication| Username + PAT (Personal Access Token)| Uses public and private key pairs. Public key is stored on the hosting account (GitHub), private key stays local. |
 | Security| Secure, but relies on token storage. Vulnerable to brute force and data leaks. | More secure (private key stays on your machine). |
 | Use| Easier for beginners (just copy-paste the URL). Requires authentication on each push/pull. | Requires SSH key setup but is seamless after that. Key-based authentication is automatic. |
 
