@@ -19,7 +19,7 @@ title: Julia Serrano # the main title
 tagline: Writing to learn and remember. Sharing in case it helps!   # it will display as the sub-title
 
 description: >- # used by seo meta and the atom feed
-  Blog creado tanto para subir contenido personal como para subir guías y conceptos aprendidos sobre tecnología
+  A personal blog for learning and remembering. The first posts will likely be technical, but we'll see if more personal ones come up.
 # Fill in the protocol & hostname for your site.
 # e.g. 'https://username.github.io', note that it does not end with a '/'.
 url: "https://JuliaSerrano.github.io"
