@@ -16,7 +16,7 @@ timezone: Europe/Madrid
 
 title: Julia Serrano # the main title
 
-tagline: Blog personal # it will display as the sub-title
+tagline: Writing to learn and remember. Sharing in case it helps!   # it will display as the sub-title
 
 description: >- # used by seo meta and the atom feed
   Blog creado tanto para subir contenido personal como para subir guías y conceptos aprendidos sobre tecnología
