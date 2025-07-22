@@ -18,7 +18,7 @@ Nowadays, you can create **containers** that **encapsulate** all of that and can
 ## 1. Basic Infrastructure - Virutal Machines (VMs) and Containers
 To understand Docker, it's really useful to first understand **how it works at hardware level**, and its advantages against using a VM.
 
-### Virtual Machine - Infrastructure and limitations
+### Virtual Machine (VM)
 A VM is a software-based emulation of a physical computer allowing it to run a **separate operating system** and applications within a **single host machine**. [](https://azure.microsoft.com/en-us/resources/cloud-computing-dictionary/what-is-a-virtual-machine#:~:text=A%20virtual%20machine%20(VM)%20is,02/)
 
 Meaning - you can have on your computer, another full-blown machine with its own operating system and kernel.
@@ -28,7 +28,7 @@ Meaning - you can have on your computer, another full-blown machine with its own
 
 The key underlying technology behind virtualization are **hypervisors**, which act as **intermediaries between the physical hardware and the VMs**, allocating resources like CPU, memory and storage.
 
-#### Types of hypervisors:
+#### Types of hypervisors
 ##### Type 1
 
 
@@ -48,21 +48,43 @@ But, this makes it **simpler and faster to set up** and use for light tasks, bec
 ![Virtual Machine Infrastructure - Hypervisors Type 2](../assets/img/vm-hypervisorsT2.svg)
 
 
-### Container - Infrastructure and benefits
+### Docker Container
+Containers offer a new perspective, instead of abstracting the physical hardware, which requires a full copy of an OS, binaries, libraries, etc taking up tens of GBs; containers only virtualize software layers above the operating system level.
+
+This results in lightweight, fast and portable environments, but because all containers on the same machine share the host OS kernel, a vulnerability there can be exploited by a compromised container, potentially leading to a complete system compromise.
+
+Note: dive deeper on some other section maybe on risks and how to prevent them? all containers on the same machine will share the OS kernel, so a vulnerability in the kernel can affect all containers. 
+1. (https://sysdig.com/learn-cloud-native/container-security-best-practices/#:~:text=Protect%20your%20resources,layer%20for%20filtering%20network%20requests.)
+ 2.(https://infosecwriteups.com/unmasking-containers-processes-through-the-hosts-lens-57bbe4e3ed74)
+3. https://docs.docker.com/engine/security/
+
+![Virtual Machine Infrastructure - Hypervisors Type 1](../assets/img/docker-containers.svg)
+
+
+The key point to understand is:
+* VMs isolation comes by abstracting the physical hardware - you can see each VM as a separate computer which needs an hypervisor as an intermediary between them and the hardware
+* Docker containers isolation comes from the application layer - you can see each container as an isolated process on the host OS, which needs a runtime as an intermediary between them and the OS
+
+ NOTE: add limitations on containers because they share host OS kernel. How to run containers with linux image in windows.
 
 
 ## 2. Key Docker Concepts
 ### Image
-Template or package used to create container. Includes everything you need to run the container: code, dependencias, libraries and environment variables.
+Template or package used to create a container. Includes everything you need to run the container: code, dependencias, libraries and environment variables.
 
-You can create your own images, to include everything you want and for the image to be created following your "recipe", you have to specify it formally in a file called Dockerfile, more on that later (link)
+You can create your own images, to include exactly what you need. For the image to be created following your "recipe", you have to specify it formally in a file called Dockerfile, more on that later (link)
 
 
 ### Container
 Running instance of an image. Multiple containers can be created from a single image.
 
 As Dockerfiles are used to create the recipe to create an image. The docker-compose file is created for
-running multiple containers, specifying how each container its created (underlying image etc) and how the containers created can connect.
+running multiple containers, specifying how each container its created (underlying image etc) and how the running containers can communicate.
+
+NOTE: dive a bit deeper on container being processes (https://labs.iximiuz.com/tutorials/containers-are-processes-d17b1df8)
+https://www.youtube.com/watch?v=7CKCWqUkMJ4
+https://securitylabs.datadoghq.com/articles/container-security-fundamentals-part-1/
+
 
 ### Docker Host
 
