@@ -1,0 +1,308 @@
+---
+---
+
+@use 'main';
+
+/* custom overrides */
+.recipe-hero-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  border-radius: 10px;
+}
+
+.recipe-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.recipe-meta-item {
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--main-border-color);
+  border-radius: 10px;
+  background: var(--card-bg);
+}
+
+.recipe-meta-label {
+  color: var(--text-muted-color);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.recipe-section {
+  margin-bottom: 2rem;
+}
+
+.recipe-servings-control {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.recipe-servings-input-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.18rem;
+  border: 1px solid var(--btn-border-color);
+  border-radius: 999px;
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+}
+
+.recipe-servings-input-group .btn {
+  width: 2.2rem;
+  height: 2.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  padding: 0;
+  background: transparent;
+  color: var(--text-color);
+  font-size: 1rem;
+  line-height: 1;
+  box-shadow: none;
+}
+
+.recipe-servings-input-group .btn:hover {
+  background: var(--sidebar-hover-bg);
+  color: var(--heading-color);
+}
+
+.recipe-servings-input-group .btn:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 1px var(--input-focus-border-color);
+}
+
+.recipe-servings-input-group .form-control {
+  width: 2.8rem;
+  min-height: 2.2rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--heading-color);
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+.recipe-servings-input-group .form-control:focus {
+  background: transparent;
+  color: var(--heading-color);
+  box-shadow: none;
+}
+
+.recipe-servings-input-group .form-control::-webkit-outer-spin-button,
+.recipe-servings-input-group .form-control::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.recipe-servings-input-group .form-control[type='number'] {
+  -moz-appearance: textfield;
+}
+
+.recipe-ingredients-list {
+  padding-left: 1.25rem;
+}
+
+.recipe-ingredient-quantity {
+  font-weight: 700;
+}
+
+.recipe-ingredient-unit,
+.recipe-ingredient-name,
+.recipe-ingredient-notes {
+  margin-left: 0.2rem;
+}
+
+.all-tags-link {
+  color: var(--text-muted-color);
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.all-tags-link:hover {
+  color: var(--link-color);
+  text-decoration: none;
+}
+
+.archive-filter {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 1rem 0 1.5rem;
+}
+
+.archive-filter-btn {
+  border: 1px solid var(--btn-border-color);
+  background: var(--card-bg);
+  color: var(--text-color);
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+
+.archive-filter-btn:hover {
+  background: var(--sidebar-hover-bg);
+}
+
+.archive-filter-btn.is-active {
+  background: var(--sidebar-hover-bg);
+  color: var(--heading-color);
+  border-color: var(--input-focus-border-color);
+}
+
+.archive-entry-type {
+  margin-left: 0.6rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted-color);
+}
+
+.home-filter-panel {
+  margin: 1rem 0 1.75rem;
+  padding: 1rem 1rem 0.9rem;
+  border: 1px solid var(--main-border-color);
+  border-radius: 14px;
+  background: linear-gradient(180deg, var(--card-bg), transparent 180%);
+}
+
+.home-filter-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.home-filter-heading-main {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.home-filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.home-filter-toggle,
+.home-filter-clear {
+  border: 1px solid var(--btn-border-color);
+  background: var(--card-bg);
+  color: var(--text-color);
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+
+.home-filter-toggle:hover,
+.home-filter-clear:hover {
+  background: var(--sidebar-hover-bg);
+}
+
+.home-filter-panel.is-collapsed {
+  padding-bottom: 1rem;
+}
+
+.home-filter-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: min(100%, 32rem);
+  padding: 0 0.95rem;
+  border: 1px solid var(--btn-border-color);
+  border-radius: 999px;
+  background: var(--card-bg);
+  color: var(--text-muted-color);
+  box-shadow: var(--card-shadow);
+}
+
+.home-filter-search-wrap:focus-within {
+  border-color: var(--input-focus-border-color);
+}
+
+.home-filter-group + .home-filter-group {
+  margin-top: 0.9rem;
+}
+
+.home-filter-label {
+  display: block;
+  margin-bottom: 0.45rem;
+  color: var(--text-muted-color);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.home-filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.home-filter-search {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--text-color);
+  padding: 0.7rem 0;
+}
+
+.home-filter-search:focus {
+  box-shadow: none;
+  outline: none;
+}
+
+@media (max-width: 768px) {
+  .home-filter-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .home-filter-heading-main {
+    width: 100%;
+  }
+
+  .home-filter-search-wrap {
+    width: 100%;
+  }
+}
+
+.home-filter-chip {
+  border: 1px solid var(--btn-border-color);
+  background: var(--card-bg);
+  color: var(--text-color);
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+
+.home-filter-chip:hover {
+  background: var(--sidebar-hover-bg);
+}
+
+.home-filter-chip.is-active {
+  background: var(--sidebar-hover-bg);
+  border-color: var(--input-focus-border-color);
+  color: var(--heading-color);
+}
+
+.home-filter-empty {
+  margin-top: 1rem;
+  color: var(--text-muted-color);
+}

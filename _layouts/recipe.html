@@ -1,0 +1,315 @@
+---
+layout: recipes-base
+panel_includes:
+  - toc
+tail_includes:
+  - recipe-related
+  - post-nav
+script_includes:
+  - comment
+  - recipe-servings
+---
+
+{% include lang.html %}
+
+{% include toc-status.html %}
+
+<article class="px-1" data-toc="{{ enable_toc }}">
+  <header>
+    <h1 data-toc-skip>{{ page.title }}</h1>
+    {% if page.description %}
+      <p class="post-desc fw-light mb-4">{{ page.description }}</p>
+    {% endif %}
+
+    <div class="post-meta text-muted">
+      <!-- published date -->
+      <span>
+        {{ site.data.locales[lang].post.posted }}
+        {% include datetime.html date=page.date tooltip=true lang=lang %}
+      </span>
+
+      <!-- lastmod date -->
+      {% if page.last_modified_at and page.last_modified_at != page.date %}
+        <span>
+          {{ site.data.locales[lang].post.updated }}
+          {% include datetime.html date=page.last_modified_at tooltip=true lang=lang %}
+        </span>
+      {% endif %}
+
+      {% if page.image %}
+        {% capture src %}src="{{ page.image.path | default: page.image }}"{% endcapture %}
+        {% capture class %}class="recipe-hero-img{% if page.image.no_bg %}{{ ' no-bg' }}{% endif %}"{% endcapture %}
+        {% capture alt %}alt="{{ page.image.alt | xml_escape | default: "Preview Image" }}"{% endcapture %}
+
+        {% if page.image.lqip %}
+          {%- capture lqip -%}lqip="{{ page.image.lqip }}"{%- endcapture -%}
+        {% endif %}
+
+        <div class="mt-3 mb-3">
+          <img {{ src }} {{ class }} {{ alt }} w="1200" h="630" {{ lqip }}>
+          {%- if page.image.alt -%}
+            <figcaption class="text-center pt-2 pb-2">{{ page.image.alt }}</figcaption>
+          {%- endif -%}
+        </div>
+      {% endif %}
+
+      <div class="d-flex justify-content-between">
+        <span>
+          {% if page.author %}
+            {% assign authors = page.author %}
+          {% elsif page.authors %}
+            {% assign authors = page.authors %}
+          {% endif %}
+
+          {{ site.data.locales[lang].post.written_by }}
+
+          <em>
+            {% if authors %}
+              {% for author in authors %}
+                {% if site.data.authors[author].url -%}
+                  <a href="{{ site.data.authors[author].url }}">{{ site.data.authors[author].name }}</a>
+                {%- else -%}
+                  {{ site.data.authors[author].name }}
+                {%- endif %}
+                {% unless forloop.last %}{{ '</em>, <em>' }}{% endunless %}
+              {% endfor %}
+            {% else %}
+              <a href="{{ site.social.links[0] }}">{{ site.social.name }}</a>
+            {% endif %}
+          </em>
+        </span>
+
+        <div>
+          <!-- pageviews -->
+          {% if site.pageviews.provider and site.analytics[site.pageviews.provider].id %}
+            <span>
+              <em id="pageviews">
+                <i class="fas fa-spinner fa-spin small"></i>
+              </em>
+              {{ site.data.locales[lang].post.pageview_measure }}
+            </span>
+          {% endif %}
+
+          <!-- read time -->
+          {% include read-time.html content=content prompt=true lang=lang %}
+        </div>
+      </div>
+    </div>
+
+    {% assign has_recipe_meta = false %}
+    {% if page.prep_time or page.cook_time or page.total_time or page.servings or page.yield or page.nutrition %}
+      {% assign has_recipe_meta = true %}
+    {% endif %}
+
+    {% if has_recipe_meta %}
+      <section class="recipe-meta mt-4 mb-4">
+        <div class="recipe-meta-grid">
+          {% if page.prep_time %}
+            <div class="recipe-meta-item">
+              <span class="recipe-meta-label">Prep time</span>
+              <strong>{{ page.prep_time }}</strong>
+            </div>
+          {% endif %}
+
+          {% if page.cook_time %}
+            <div class="recipe-meta-item">
+              <span class="recipe-meta-label">Cook time</span>
+              <strong>{{ page.cook_time }}</strong>
+            </div>
+          {% endif %}
+
+          {% if page.total_time %}
+            <div class="recipe-meta-item">
+              <span class="recipe-meta-label">Total time</span>
+              <strong>{{ page.total_time }}</strong>
+            </div>
+          {% endif %}
+
+          {% if page.servings %}
+            <div class="recipe-meta-item">
+              <span class="recipe-meta-label">Servings</span>
+              <strong>{{ page.servings }}</strong>
+            </div>
+          {% endif %}
+
+          {% if page.yield %}
+            <div class="recipe-meta-item">
+              <span class="recipe-meta-label">Yield</span>
+              <strong>
+                {% if page.yield.quantity %}
+                  <span
+                    data-yield-quantity
+                    data-base-yield-quantity="{{ page.yield.quantity }}"
+                  >
+                    {{ page.yield.quantity }}
+                  </span>
+                  {% if page.yield.unit %}
+                    <span data-yield-unit>{{ page.yield.unit }}</span>
+                  {% endif %}
+                {% else %}
+                  {{ page.yield }}
+                {% endif %}
+              </strong>
+            </div>
+          {% endif %}
+        </div>
+
+        {% if page.nutrition %}
+          <div class="recipe-nutrition mt-3">
+            <span class="recipe-meta-label d-block mb-2">Nutrition</span>
+            <div class="recipe-meta-grid">
+              {% for item in page.nutrition %}
+                <div class="recipe-meta-item">
+                  <span class="recipe-meta-label">{{ item[0] | replace: '_', ' ' | capitalize }}</span>
+                  <strong>{{ item[1] }}</strong>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+      </section>
+    {% endif %}
+  </header>
+
+  {% if enable_toc %}
+    <div id="toc-bar" class="d-flex align-items-center justify-content-between invisible">
+      <span class="label text-truncate">{{ page.title }}</span>
+      <button type="button" class="toc-trigger btn me-1">
+        <i class="fa-solid fa-list-ul fa-fw"></i>
+      </button>
+    </div>
+
+    <button id="toc-solo-trigger" type="button" class="toc-trigger btn btn-outline-secondary btn-sm">
+      <span class="label ps-2 pe-1">{{- site.data.locales[lang].panel.toc -}}</span>
+      <i class="fa-solid fa-angle-right fa-fw"></i>
+    </button>
+
+    <dialog id="toc-popup" class="p-0">
+      <div class="header d-flex flex-row align-items-center justify-content-between">
+        <div class="label text-truncate py-2 ms-4">{{- page.title -}}</div>
+        <button id="toc-popup-close" type="button" class="btn mx-1 my-1 opacity-75">
+          <i class="fas fa-close"></i>
+        </button>
+      </div>
+      <div id="toc-popup-content" class="px-4 py-3 pb-4"></div>
+    </dialog>
+  {% endif %}
+
+  <div class="content">
+    {% if page.ingredients %}
+      <section
+        class="recipe-section"
+        {% if page.servings %}
+          data-recipe-servings
+          data-base-servings="{{ page.servings }}"
+          {% if page.yield.quantity %}
+            data-base-yield-quantity="{{ page.yield.quantity }}"
+          {% endif %}
+        {% endif %}
+      >
+        <h2 id="ingredients">Ingredients</h2>
+        {% if page.servings %}
+          <div class="recipe-servings-control mb-3">
+            <label for="recipe-servings-input" class="recipe-meta-label">Servings</label>
+            <div class="recipe-servings-input-group">
+              <button type="button" class="btn btn-outline-secondary btn-sm" data-servings-decrement>-</button>
+              <input
+                id="recipe-servings-input"
+                class="form-control"
+                type="number"
+                min="1"
+                step="1"
+                value="{{ page.servings }}"
+                inputmode="numeric"
+                data-servings-input
+              >
+              <button type="button" class="btn btn-outline-secondary btn-sm" data-servings-increment>+</button>
+            </div>
+          </div>
+        {% endif %}
+
+        <ul class="recipe-ingredients-list">
+          {% for ingredient in page.ingredients %}
+            <li class="recipe-ingredient">
+              {% if ingredient.name %}
+                {% if ingredient.quantity %}
+                  <span
+                    class="recipe-ingredient-quantity"
+                    data-base-quantity="{{ ingredient.quantity }}"
+                  >
+                    {{ ingredient.quantity }}
+                  </span>
+                {% endif %}
+
+                {% if ingredient.unit %}
+                  <span class="recipe-ingredient-unit">{{ ingredient.unit }}</span>
+                {% endif %}
+
+                <span class="recipe-ingredient-name">{{ ingredient.name }}</span>
+
+                {% if ingredient.notes %}
+                  <span class="recipe-ingredient-notes">, {{ ingredient.notes }}</span>
+                {% endif %}
+              {% else %}
+                {{ ingredient }}
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endif %}
+
+    {{ content }}
+  </div>
+
+  <div class="post-tail-wrapper text-muted">
+    <!-- categories -->
+    {% if page.categories.size > 0 %}
+      <div class="post-meta mb-3">
+        <i class="far fa-folder-open fa-fw me-1"></i>
+        {% for category in page.categories %}
+          <a href="{{ site.baseurl }}/categories/{{ category | slugify | url_encode }}/">{{ category }}</a>
+          {%- unless forloop.last -%},{%- endunless -%}
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- tags -->
+    {% if page.tags.size > 0 %}
+      <div class="post-tags">
+        <i class="fa fa-tags fa-fw me-1"></i>
+        {% for tag in page.tags %}
+          <a
+            href="{{ site.baseurl }}/recipe-tags/{{ tag | slugify | url_encode }}/"
+            class="post-tag no-text-decoration"
+          >
+            {{- tag -}}
+          </a>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div
+      class="
+        post-tail-bottom
+        d-flex justify-content-between align-items-center mt-5 pb-2
+      "
+    >
+      <div class="license-wrapper">
+        {% if site.data.locales[lang].copyright.license.template %}
+          {% capture _replacement %}
+        <a href="{{ site.data.locales[lang].copyright.license.link }}">
+          {{ site.data.locales[lang].copyright.license.name }}
+        </a>
+        {% endcapture %}
+
+          {{ site.data.locales[lang].copyright.license.template | replace: ':LICENSE_NAME', _replacement }}
+        {% endif %}
+      </div>
+
+      {% include post-sharing.html lang=lang %}
+    </div>
+    <!-- .post-tail-bottom -->
+  </div>
+  <!-- div.post-tail-wrapper -->
+</article>

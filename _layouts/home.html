@@ -1,0 +1,303 @@
+---
+layout: default
+refactor: true
+---
+
+{% include lang.html %}
+
+{% assign all_pinned = site.posts | where: 'pin', 'true' %}
+{% assign all_normal = site.posts | where_exp: 'item', 'item.pin != true and item.hidden != true' %}
+{% assign posts = '' | split: '' %}
+
+{% assign visible_start = paginator.page | minus: 1 | times: paginator.per_page %}
+{% assign visible_end = visible_start | plus: paginator.per_page %}
+
+{% if all_pinned.size > visible_start %}
+  {% if all_pinned.size > visible_end %}
+    {% assign pinned_size = paginator.per_page %}
+  {% else %}
+    {% assign pinned_size = all_pinned.size | minus: visible_start %}
+  {% endif %}
+
+  {% for i in (visible_start..all_pinned.size) limit: pinned_size %}
+    {% assign posts = posts | push: all_pinned[i] %}
+  {% endfor %}
+{% else %}
+  {% assign pinned_size = 0 %}
+{% endif %}
+
+{% assign normal_size = paginator.posts | size | minus: pinned_size %}
+
+{% if normal_size > 0 %}
+  {% if pinned_size > 0 %}
+    {% assign normal_start = 0 %}
+  {% else %}
+    {% assign normal_start = visible_start | minus: all_pinned.size %}
+  {% endif %}
+
+  {% assign normal_end = normal_start | plus: normal_size | minus: 1 %}
+
+  {% for i in (normal_start..normal_end) %}
+    {% assign posts = posts | push: all_normal[i] %}
+  {% endfor %}
+{% endif %}
+
+{% assign all_categories = '' | split: '' %}
+{% assign all_tags = '' | split: '' %}
+
+{% for post in site.posts %}
+  {% for category in post.categories %}
+    {% assign all_categories = all_categories | push: category %}
+  {% endfor %}
+
+  {% for tag in post.tags %}
+    {% assign all_tags = all_tags | push: tag %}
+  {% endfor %}
+{% endfor %}
+
+{% assign all_categories = all_categories | uniq | sort_natural %}
+{% assign all_tags = all_tags | uniq | sort_natural %}
+
+<section class="home-filter-panel is-collapsed" data-home-filters>
+  <div class="home-filter-heading">
+    <div class="home-filter-heading-main">
+      <label class="home-filter-search-wrap" for="home-filter-search">
+        <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+        <input
+          id="home-filter-search"
+          class="home-filter-search"
+          type="search"
+          placeholder="Search posts, tags, or categories"
+          autocomplete="off"
+          data-filter-search
+        >
+      </label>
+    </div>
+    <div class="home-filter-actions">
+      <button type="button" class="home-filter-toggle" data-filter-toggle aria-expanded="false">
+        Show filters
+      </button>
+      <button type="button" class="home-filter-clear" data-filter-clear hidden>Clear filters</button>
+    </div>
+  </div>
+
+  <div class="home-filter-body" data-filter-body hidden>
+    {% if all_categories.size > 0 %}
+      <div class="home-filter-group">
+      <span class="home-filter-label">Categories</span>
+      <div class="home-filter-options">
+        {% for category in all_categories %}
+          <button
+            type="button"
+            class="home-filter-chip"
+            data-filter-group="category"
+            data-filter-value="{{ category | slugify }}"
+          >
+            {{ category }}
+          </button>
+        {% endfor %}
+      </div>
+      </div>
+    {% endif %}
+
+    {% if all_tags.size > 0 %}
+      <div class="home-filter-group">
+      <span class="home-filter-label">Tags</span>
+      <div class="home-filter-options">
+        {% for tag in all_tags %}
+          <button
+            type="button"
+            class="home-filter-chip"
+            data-filter-group="tag"
+            data-filter-value="{{ tag | slugify }}"
+          >
+            {{ tag }}
+          </button>
+        {% endfor %}
+      </div>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<div id="post-list" class="flex-grow-1 px-xl-1" data-filterable-post-list>
+  {% for post in posts %}
+    {% assign post_category_keys = '' | split: '' %}
+    {% assign post_tag_keys = '' | split: '' %}
+
+    {% for category in post.categories %}
+      {% assign post_category_keys = post_category_keys | push: category | join: '' %}
+    {% endfor %}
+
+    {% for tag in post.tags %}
+      {% assign post_tag_keys = post_tag_keys | push: tag | join: '' %}
+    {% endfor %}
+
+    <article
+      class="card-wrapper card"
+      data-post-card
+      data-post-search="{{ post.title | downcase }} {% if post.description %}{{ post.description | strip_html | downcase }}{% else %}{{ post.excerpt | strip_html | downcase }}{% endif %} {% for category in post.categories %}{{ category | downcase }} {% endfor %}{% for tag in post.tags %}{{ tag | downcase }} {% endfor %}"
+      data-post-categories="{% for category in post.categories %}{{ category | slugify }}{% unless forloop.last %}|{% endunless %}{% endfor %}"
+      data-post-tags="{% for tag in post.tags %}{{ tag | slugify }}{% unless forloop.last %}|{% endunless %}{% endfor %}"
+    >
+      <a href="{{ post.url | relative_url }}" class="post-preview row g-0 flex-md-row-reverse">
+        {% assign card_body_col = '12' %}
+
+        {% if post.image %}
+          {% assign src = post.image.path | default: post.image %}
+          {% unless src contains '//' %}
+            {% assign src = post.media_subpath | append: '/' | append: src | replace: '//', '/' %}
+          {% endunless %}
+
+          {% assign alt = post.image.alt | xml_escape | default: 'Preview Image' %}
+          {% assign lqip = null %}
+
+          {% if post.image.lqip %}
+            {% capture lqip %}lqip="{{ post.image.lqip }}"{% endcapture %}
+          {% endif %}
+
+          <div class="col-md-5">
+            <img src="{{ src }}" alt="{{ alt }}" {{ lqip }}>
+          </div>
+
+          {% assign card_body_col = '7' %}
+        {% endif %}
+
+        <div class="col-md-{{ card_body_col }}">
+          <div class="card-body d-flex flex-column">
+            <h1 class="card-title my-2 mt-md-0">{{ post.title }}</h1>
+
+            <div class="card-text content mt-0 mb-3">
+              <p>{% include post-description.html %}</p>
+            </div>
+
+            <div class="post-meta flex-grow-1 d-flex align-items-end">
+              <div class="me-auto">
+                <i class="far fa-calendar fa-fw me-1"></i>
+                {% include datetime.html date=post.date lang=lang %}
+
+                {% if post.categories.size > 0 %}
+                  <i class="far fa-folder-open fa-fw me-1"></i>
+                  <span class="categories">
+                    {% for category in post.categories %}
+                      {{ category }}
+                      {%- unless forloop.last -%},{%- endunless -%}
+                    {% endfor %}
+                  </span>
+                {% endif %}
+              </div>
+
+              {% if post.pin %}
+                <div class="pin ms-1">
+                  <i class="fas fa-thumbtack fa-fw"></i>
+                  <span>{{ site.data.locales[lang].post.pin_prompt }}</span>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </a>
+    </article>
+  {% endfor %}
+</div>
+
+<p class="home-filter-empty" data-filter-empty hidden>No posts match the selected filters.</p>
+
+{% if paginator.total_pages > 1 %}
+  {% include post-paginator.html %}
+{% endif %}
+
+<script>
+  (() => {
+    const getValues = (value) => new Set((value || '').split('|').filter(Boolean));
+
+    const initHomeFilters = () => {
+      const root = document.querySelector('[data-home-filters]');
+      const list = document.querySelector('[data-filterable-post-list]');
+      if (!root || !list) return;
+
+      const chips = root.querySelectorAll('[data-filter-group]');
+      const clearButton = root.querySelector('[data-filter-clear]');
+      const toggleButton = root.querySelector('[data-filter-toggle]');
+      const body = root.querySelector('[data-filter-body]');
+      const searchInput = root.querySelector('[data-filter-search]');
+      const emptyState = document.querySelector('[data-filter-empty]');
+      const cards = list.querySelectorAll('[data-post-card]');
+      const selected = { category: new Set(), tag: new Set() };
+
+      const setCollapsed = (collapsed) => {
+        root.classList.toggle('is-collapsed', collapsed);
+        if (body) body.hidden = collapsed;
+        if (toggleButton) {
+          toggleButton.setAttribute('aria-expanded', String(!collapsed));
+          toggleButton.textContent = collapsed ? 'Show filters' : 'Hide filters';
+        }
+      };
+
+      const applyFilters = () => {
+        let visible = 0;
+
+        cards.forEach((card) => {
+          const categories = getValues(card.dataset.postCategories);
+          const tags = getValues(card.dataset.postTags);
+          const searchText = (searchInput?.value || '').trim().toLowerCase();
+          const haystack = (card.dataset.postSearch || '').toLowerCase();
+
+          const categoryMatch =
+            selected.category.size === 0 ||
+            [...selected.category].some((value) => categories.has(value));
+          const tagMatch =
+            selected.tag.size === 0 ||
+            [...selected.tag].some((value) => tags.has(value));
+          const searchMatch = !searchText || haystack.includes(searchText);
+
+          const show = categoryMatch && tagMatch && searchMatch;
+          card.hidden = !show;
+          if (show) visible += 1;
+        });
+
+        const hasFilters =
+          selected.category.size > 0 || selected.tag.size > 0 || (searchInput?.value || '').trim().length > 0;
+        if (clearButton) clearButton.hidden = !hasFilters;
+        if (emptyState) emptyState.hidden = visible > 0;
+        if (hasFilters) setCollapsed(false);
+      };
+
+      chips.forEach((chip) => {
+        chip.addEventListener('click', () => {
+          const group = chip.dataset.filterGroup;
+          const value = chip.dataset.filterValue;
+          const targetSet = selected[group];
+
+          if (targetSet.has(value)) {
+            targetSet.delete(value);
+            chip.classList.remove('is-active');
+          } else {
+            targetSet.add(value);
+            chip.classList.add('is-active');
+          }
+
+          applyFilters();
+        });
+      });
+
+      clearButton?.addEventListener('click', () => {
+        Object.values(selected).forEach((set) => set.clear());
+        chips.forEach((chip) => chip.classList.remove('is-active'));
+        if (searchInput) searchInput.value = '';
+        applyFilters();
+      });
+
+      toggleButton?.addEventListener('click', () => {
+        setCollapsed(!root.classList.contains('is-collapsed'));
+      });
+
+      searchInput?.addEventListener('input', applyFilters);
+
+      setCollapsed(true);
+      applyFilters();
+    };
+
+    window.addEventListener('load', initHomeFilters);
+  })();
+</script>

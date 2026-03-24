@@ -1,0 +1,63 @@
+<!-- Recommend the other 3 recipes according to the tags and categories of the current recipe. -->
+
+{% assign TOTAL_SIZE = 3 %}
+{% assign TAG_SCORE = 1 %}
+{% assign CATEGORY_SCORE = 0.5 %}
+{% assign SEPARATOR = ':' %}
+{% assign match_recipes = '' | split: '' %}
+
+{% for recipe in site.recipes %}
+  {% if recipe.url == page.url %}
+    {% continue %}
+  {% endif %}
+
+  {% assign score = 0 %}
+
+  {% for tag in recipe.tags %}
+    {% if page.tags contains tag %}
+      {% assign score = score | plus: TAG_SCORE %}
+    {% endif %}
+  {% endfor %}
+
+  {% for category in recipe.categories %}
+    {% if page.categories contains category %}
+      {% assign score = score | plus: CATEGORY_SCORE %}
+    {% endif %}
+  {% endfor %}
+
+  {% if score > 0 %}
+    {% capture score_item %}{{ score }}{{ SEPARATOR }}{{ forloop.index0 }}{% endcapture %}
+    {% assign match_recipes = match_recipes | push: score_item %}
+  {% endif %}
+{% endfor %}
+
+{% assign match_recipes = match_recipes | sort | reverse %}
+{% assign relate_recipes = '' | split: '' %}
+
+{% for entry in match_recipes limit: TOTAL_SIZE %}
+  {% assign index = entry | split: SEPARATOR | last | plus: 0 %}
+  {% assign relate_recipes = relate_recipes | push: site.recipes[index] %}
+{% endfor %}
+
+{% if relate_recipes.size > 0 %}
+  <aside id="related-posts" aria-labelledby="related-label">
+    <h3 class="mb-4" id="related-label">
+      {{- site.data.locales[include.lang].post.relate_posts -}}
+    </h3>
+    <nav class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4 mb-4">
+      {% for recipe in relate_recipes %}
+        <article class="col">
+          <a href="{{ recipe.url | relative_url }}" class="post-preview card h-100">
+            <div class="card-body">
+              {% include datetime.html date=recipe.date lang=include.lang %}
+              <h4 class="pt-0 my-2">{{ recipe.title }}</h4>
+              <div class="text-muted">
+                <p>{{ recipe.description | default: recipe.excerpt | strip_html }}</p>
+              </div>
+            </div>
+          </a>
+        </article>
+      {% endfor %}
+    </nav>
+  </aside>
+{% endif %}

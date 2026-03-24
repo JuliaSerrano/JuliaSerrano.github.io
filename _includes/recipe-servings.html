@@ -1,0 +1,45 @@
+<script>
+  (() => {
+    const formatQuantity = (value) => {
+      if (!Number.isFinite(value)) return '';
+      const rounded = Math.round(value * 100) / 100;
+      return Number.isInteger(rounded) ? String(rounded) : String(rounded).replace(/\.?0+$/, '');
+    };
+
+    const initRecipeServings = () => {
+      document.querySelectorAll('[data-recipe-servings]').forEach((section) => {
+        const baseServings = Number(section.dataset.baseServings);
+        const baseYieldQuantity = Number(section.dataset.baseYieldQuantity);
+        const input = section.querySelector('[data-servings-input]');
+        const decrement = section.querySelector('[data-servings-decrement]');
+        const increment = section.querySelector('[data-servings-increment]');
+        const quantities = section.querySelectorAll('[data-base-quantity]');
+        const yieldQuantity = document.querySelector('[data-yield-quantity]');
+
+        if (!baseServings || !input || quantities.length === 0) return;
+
+        const update = (nextServings) => {
+          const servings = Math.max(1, Math.round(Number(nextServings) || baseServings));
+          input.value = servings;
+          const ratio = servings / baseServings;
+
+          quantities.forEach((node) => {
+            const baseQuantity = Number(node.dataset.baseQuantity);
+            if (!Number.isFinite(baseQuantity)) return;
+            node.textContent = formatQuantity(baseQuantity * ratio);
+          });
+
+          if (yieldQuantity && Number.isFinite(baseYieldQuantity)) {
+            yieldQuantity.textContent = formatQuantity(baseYieldQuantity * ratio);
+          }
+        };
+
+        decrement?.addEventListener('click', () => update(Number(input.value) - 1));
+        increment?.addEventListener('click', () => update(Number(input.value) + 1));
+        input.addEventListener('input', () => update(input.value));
+      });
+    };
+
+    window.addEventListener('load', initRecipeServings);
+  })();
+</script>

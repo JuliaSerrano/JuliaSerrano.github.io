@@ -1,0 +1,32 @@
+---
+layout: page
+---
+
+<div id="tags" class="d-flex flex-wrap mx-xl-2">
+  {% assign tags = '' | split: '' %}
+
+  {% for recipe in site.recipes %}
+    {% for tag in recipe.tags %}
+      {% assign tags = tags | push: tag %}
+    {% endfor %}
+  {% endfor %}
+
+  {% assign sorted_tags = tags | uniq | sort_natural %}
+
+  {% for t in sorted_tags %}
+    {% assign tag_count = 0 %}
+
+    {% for recipe in site.recipes %}
+      {% if recipe.tags contains t %}
+        {% assign tag_count = tag_count | plus: 1 %}
+      {% endif %}
+    {% endfor %}
+
+    <div>
+      <a class="tag" href="{{ t | slugify | url_encode | prepend: '/recipe-tags/' | append: '/' | relative_url }}">
+        {{ t -}}
+        <span class="text-muted">{{ tag_count }}</span>
+      </a>
+    </div>
+  {% endfor %}
+</div>

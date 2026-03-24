@@ -1,0 +1,102 @@
+---
+layout: page
+---
+
+{% include lang.html %}
+
+{% assign df_strftime_m = site.data.locales[lang].df.archives.strftime | default: '/ %m' %}
+{% assign df_dayjs_m = site.data.locales[lang].df.archives.dayjs | default: '/ MM' %}
+
+{% assign entries = '' | split: '' %}
+
+{% for post in site.posts %}
+  {% assign entries = entries | push: post %}
+{% endfor %}
+
+{% for recipe in site.recipes %}
+  {% assign entries = entries | push: recipe %}
+{% endfor %}
+
+{% assign entries = entries | sort: 'date' | reverse %}
+
+<div class="archive-filter" role="group" aria-label="Archive filter">
+  <button type="button" class="archive-filter-btn is-active" data-archive-filter="post">Posts</button>
+  <button type="button" class="archive-filter-btn" data-archive-filter="recipe">Recipes</button>
+  <button type="button" class="archive-filter-btn" data-archive-filter="all">All</button>
+</div>
+
+<div id="archives" class="pl-xl-3" data-archive-list>
+  {% for entry in entries %}
+    {% assign cur_year = entry.date | date: '%Y' %}
+    {% assign entry_type = 'post' %}
+    {% if entry.collection == 'recipes' %}
+      {% assign entry_type = 'recipe' %}
+    {% endif %}
+
+    {% if cur_year != last_year %}
+      {% unless forloop.first %}</ul>{% endunless %}
+
+      <time class="year lead d-block">{{ cur_year }}</time>
+      {{ '<ul class="list-unstyled">' }}
+
+      {% assign last_year = cur_year %}
+    {% endif %}
+
+    <li data-archive-item data-archive-type="{{ entry_type }}">
+      {% assign ts = entry.date | date: '%s' %}
+      <span class="date day" data-ts="{{ ts }}" data-df="DD">{{ entry.date | date: '%d' }}</span>
+      <span class="date month small text-muted ms-1" data-ts="{{ ts }}" data-df="{{ df_dayjs_m }}">
+        {{ entry.date | date: df_strftime_m }}
+      </span>
+      <a href="{{ entry.url | relative_url }}">{{ entry.title }}</a>
+      <span class="archive-entry-type archive-entry-type-{{ entry_type }}">{{ entry_type }}</span>
+    </li>
+
+    {% if forloop.last %}</ul>{% endif %}
+  {% endfor %}
+</div>
+
+<script>
+  (() => {
+    const initArchiveFilter = () => {
+      const container = document.querySelector('[data-archive-list]');
+      if (!container) return;
+
+      const buttons = document.querySelectorAll('[data-archive-filter]');
+      const items = container.querySelectorAll('[data-archive-item]');
+      const years = container.querySelectorAll('.year');
+      const lists = container.querySelectorAll('ul');
+
+      const updateYearVisibility = () => {
+        lists.forEach((list, index) => {
+          const visibleItems = list.querySelectorAll('[data-archive-item]:not([hidden])');
+          const year = years[index];
+          const show = visibleItems.length > 0;
+          list.hidden = !show;
+          if (year) year.hidden = !show;
+        });
+      };
+
+      const applyFilter = (type) => {
+        items.forEach((item) => {
+          const matches = type === 'all' || item.dataset.archiveType === type;
+          item.hidden = !matches;
+        });
+
+        buttons.forEach((button) => {
+          button.classList.toggle('is-active', button.dataset.archiveFilter === type);
+        });
+
+        updateYearVisibility();
+      };
+
+      buttons.forEach((button) => {
+        button.addEventListener('click', () => applyFilter(button.dataset.archiveFilter));
+      });
+
+      applyFilter('post');
+    };
+
+    window.addEventListener('load', initArchiveFilter);
+  })();
+</script>
