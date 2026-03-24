@@ -1,0 +1,48 @@
+---
+layout: page
+---
+
+{% include lang.html %}
+
+{% assign category_names = '' | split: '' %}
+
+{% for recipe in site.recipes %}
+  {% for category in recipe.categories %}
+    {% unless category_names contains category %}
+      {% assign category_names = category_names | push: category %}
+    {% endunless %}
+  {% endfor %}
+{% endfor %}
+
+{% assign category_names = category_names | sort_natural %}
+
+<div class="card categories">
+  <div class="card-header d-flex justify-content-between">
+    <span class="ms-2">
+      <i class="far fa-folder-open fa-fw"></i>
+      <span class="mx-2">Recipe categories</span>
+    </span>
+  </div>
+
+  <ul class="list-group">
+    {% for category_name in category_names %}
+      {% assign recipes_size = 0 %}
+
+      {% for recipe in site.recipes %}
+        {% if recipe.categories contains category_name %}
+          {% assign recipes_size = recipes_size | plus: 1 %}
+        {% endif %}
+      {% endfor %}
+
+      <li class="list-group-item">
+        <i class="far fa-folder fa-fw"></i>
+        <a href="{{ '/recipe-categories/' | append: category_name | slugify | append: '/' | relative_url }}" class="mx-2">
+          {{ category_name }}
+        </a>
+        <span class="text-muted small font-weight-light">
+          {{ recipes_size }} {% if recipes_size == 1 %}recipe{% else %}recipes{% endif %}
+        </span>
+      </li>
+    {% endfor %}
+  </ul>
+</div>
