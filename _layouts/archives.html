@@ -34,8 +34,9 @@ layout: page
     {% endif %}
 
     {% if cur_year != last_year %}
-      {% unless forloop.first %}</ul>{% endunless %}
+      {% unless forloop.first %}</ul></div>{% endunless %}
 
+      <div class="archive-year-group" data-archive-year-group>
       <time class="year lead d-block">{{ cur_year }}</time>
       {{ '<ul class="list-unstyled">' }}
 
@@ -52,7 +53,7 @@ layout: page
       <span class="archive-entry-type archive-entry-type-{{ entry_type }}">{{ entry_type }}</span>
     </li>
 
-    {% if forloop.last %}</ul>{% endif %}
+    {% if forloop.last %}</ul></div>{% endif %}
   {% endfor %}
 </div>
 
@@ -64,16 +65,20 @@ layout: page
 
       const buttons = document.querySelectorAll('[data-archive-filter]');
       const items = container.querySelectorAll('[data-archive-item]');
-      const years = container.querySelectorAll('.year');
-      const lists = container.querySelectorAll('ul');
 
       const updateYearVisibility = () => {
-        lists.forEach((list, index) => {
-          const visibleItems = list.querySelectorAll('[data-archive-item]:not([hidden])');
-          const year = years[index];
+        container.querySelectorAll('[data-archive-year-group]').forEach((group) => {
+          const year = group.querySelector('.year');
+          const list = group.querySelector('ul');
+          if (!year || !list) return;
+          const visibleItems = [...list.querySelectorAll('[data-archive-item]')].filter((item) => !item.hidden);
           const show = visibleItems.length > 0;
-          list.hidden = !show;
-          if (year) year.hidden = !show;
+          group.hidden = !show;
+
+          list.querySelectorAll('[data-archive-item]').forEach((item) => item.classList.remove('is-visible-last'));
+          if (visibleItems.length > 0) {
+            visibleItems[visibleItems.length - 1].classList.add('is-visible-last');
+          }
         });
       };
 

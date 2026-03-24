@@ -169,6 +169,10 @@
   color: var(--text-muted-color);
 }
 
+#archives ul li.is-visible-last::before {
+  height: 1.5rem;
+}
+
 .home-filter-panel {
   margin: 1rem 0 1.75rem;
   padding: 1rem 1rem 0.9rem;

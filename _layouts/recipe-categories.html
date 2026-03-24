@@ -34,9 +34,10 @@ layout: page
         {% endif %}
       {% endfor %}
 
-      <li class="list-group-item">
+    <li class="list-group-item">
         <i class="far fa-folder fa-fw"></i>
-        <a href="{{ '/recipe-categories/' | append: category_name | slugify | append: '/' | relative_url }}" class="mx-2">
+        {% assign category_slug = category_name | slugify | url_encode %}
+        <a href="{{ '/recipe-categories/' | append: category_slug | append: '/' | relative_url }}" class="mx-2">
           {{ category_name }}
         </a>
         <span class="text-muted small font-weight-light">
