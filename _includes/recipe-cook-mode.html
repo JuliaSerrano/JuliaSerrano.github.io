@@ -38,7 +38,10 @@
         let totalSeconds = 0;
         let matched = false;
 
-        for (const match of trimmed.matchAll(durationPattern)) {
+        const matcher = new RegExp(durationPattern.source, durationPattern.flags);
+        let match;
+
+        while ((match = matcher.exec(trimmed)) !== null) {
           matched = true;
           const amount = Number(match[1]);
           const unit = match[2].toLowerCase();
@@ -78,8 +81,8 @@
 
           return parsed
             .map((item) => {
-              const stepNumber = Number(item?.step);
-              const durationSeconds = parseDuration(item?.duration);
+              const stepNumber = Number(item && item.step);
+              const durationSeconds = parseDuration(item && item.duration);
 
               if (!Number.isInteger(stepNumber) || stepNumber < 1 || !durationSeconds) {
                 return null;
@@ -88,7 +91,12 @@
               return {
                 stepIndex: stepNumber - 1,
                 durationSeconds,
-                label: typeof item.label === 'string' && item.label.trim() ? item.label.trim() : 'Step timer'
+                label:
+                  item &&
+                  typeof item.label === 'string' &&
+                  item.label.trim()
+                    ? item.label.trim()
+                    : 'Step timer'
               };
             })
             .filter(Boolean);
@@ -214,13 +222,16 @@
       };
 
       const announceTimerComplete = async (timerState) => {
-        const [rang, spoke] = await Promise.allSettled([
-          startAlarmLoop(timerState),
-          Promise.resolve(speakTimerComplete(timerState.label))
-        ]);
-
-        const didRing = rang.status === 'fulfilled';
-        const didSpeak = spoke.status === 'fulfilled' && spoke.value;
+        const didRing = await startAlarmLoop(timerState)
+          .then(() => true)
+          .catch(() => false);
+        const didSpeak = (() => {
+          try {
+            return speakTimerComplete(timerState.label);
+          } catch (_) {
+            return false;
+          }
+        })();
 
         if (!didRing && !didSpeak) {
           setNote(`${timerState.label} finished.`);
@@ -515,6 +526,10 @@
       }
     };
 
-    window.addEventListener('load', initRecipeCookMode);
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initRecipeCookMode);
+    } else {
+      initRecipeCookMode();
+    }
   })();
 </script>
