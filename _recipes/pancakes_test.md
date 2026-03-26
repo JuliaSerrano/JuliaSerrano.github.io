@@ -41,6 +41,13 @@ nutrition:
   protein: 7 g
   carbs: 28 g
   fat: 8 g
+step_timers:
+  - step: 4
+    duration: 10 sec
+    label: First side
+  - step: 5
+    duration: 2 sec
+    label: Second side
 ---
 
 ## Method

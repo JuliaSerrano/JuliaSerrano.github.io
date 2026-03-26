@@ -1,0 +1,520 @@
+<script>
+  (() => {
+    const storagePrefix = 'recipe-cook-mode:';
+    const stepHeadingPattern = /^(method|instructions|directions|steps|preparation)$/i;
+    const durationPattern = /(\d+(?:\.\d+)?)\s*(h|hr|hrs|hour|hours|m|min|mins|minute|minutes|s|sec|secs|second|seconds)/gi;
+
+    const initRecipeCookMode = () => {
+      const article = document.querySelector('[data-recipe-article]');
+      const toggle = document.querySelector('[data-cook-mode-toggle]');
+      const note = document.querySelector('[data-cook-mode-note]');
+      const timersNode = document.querySelector('[data-recipe-step-timers]');
+
+      if (!article || !toggle || !note) return;
+
+      const storageKey = `${storagePrefix}${window.location.pathname}`;
+      const wakeLockSupported = 'wakeLock' in navigator && typeof navigator.wakeLock.request === 'function';
+      let wakeLock = null;
+      let cookModeEnabled = false;
+      let activeStepIndex = 0;
+      let timerTick = null;
+      let audioContext = null;
+      let alarmLoop = null;
+
+      const parseDuration = (value) => {
+        if (typeof value === 'number' && Number.isFinite(value)) {
+          return Math.max(0, Math.round(value));
+        }
+
+        if (typeof value !== 'string') return null;
+
+        const trimmed = value.trim();
+        if (!trimmed) return null;
+
+        if (/^\d+(?:\.\d+)?$/.test(trimmed)) {
+          return Math.max(0, Math.round(Number(trimmed)));
+        }
+
+        let totalSeconds = 0;
+        let matched = false;
+
+        for (const match of trimmed.matchAll(durationPattern)) {
+          matched = true;
+          const amount = Number(match[1]);
+          const unit = match[2].toLowerCase();
+
+          if (unit.startsWith('h')) {
+            totalSeconds += amount * 3600;
+          } else if (unit.startsWith('m')) {
+            totalSeconds += amount * 60;
+          } else {
+            totalSeconds += amount;
+          }
+        }
+
+        return matched ? Math.max(0, Math.round(totalSeconds)) : null;
+      };
+
+      const formatDuration = (seconds) => {
+        const safeSeconds = Math.max(0, Math.round(seconds));
+        const hours = Math.floor(safeSeconds / 3600);
+        const minutes = Math.floor((safeSeconds % 3600) / 60);
+        const remainingSeconds = safeSeconds % 60;
+
+        if (hours > 0) {
+          return `${hours}:${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+        }
+
+        return `${minutes}:${String(remainingSeconds).padStart(2, '0')}`;
+      };
+
+      const timerConfigs = (() => {
+        if (!timersNode) return [];
+
+        try {
+          const parsed = JSON.parse(timersNode.textContent);
+
+          if (!Array.isArray(parsed)) return [];
+
+          return parsed
+            .map((item) => {
+              const stepNumber = Number(item?.step);
+              const durationSeconds = parseDuration(item?.duration);
+
+              if (!Number.isInteger(stepNumber) || stepNumber < 1 || !durationSeconds) {
+                return null;
+              }
+
+              return {
+                stepIndex: stepNumber - 1,
+                durationSeconds,
+                label: typeof item.label === 'string' && item.label.trim() ? item.label.trim() : 'Step timer'
+              };
+            })
+            .filter(Boolean);
+        } catch (_) {
+          return [];
+        }
+      })();
+
+      const findInstructionList = () => {
+        const content = article.querySelector('.content');
+        if (!content) return null;
+
+        const headings = content.querySelectorAll('h2, h3, h4');
+
+        for (const heading of headings) {
+          if (!stepHeadingPattern.test(heading.textContent.trim())) continue;
+
+          let sibling = heading.nextElementSibling;
+
+          while (sibling) {
+            if (/^H[2-4]$/.test(sibling.tagName)) break;
+            if (sibling.tagName === 'OL') return sibling;
+            sibling = sibling.nextElementSibling;
+          }
+        }
+
+        return content.querySelector('ol');
+      };
+
+      const instructionList = findInstructionList();
+      const steps = instructionList ? Array.from(instructionList.children).filter((item) => item.tagName === 'LI') : [];
+      const timersByStep = new Map();
+
+      const setNote = (message) => {
+        note.textContent = message;
+      };
+
+      const getAudioContext = () => {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return null;
+
+        if (!audioContext) {
+          audioContext = new AudioContextClass();
+        }
+
+        return audioContext;
+      };
+
+      const ringTimer = async () => {
+        const context = getAudioContext();
+        if (!context) return false;
+
+        try {
+          if (context.state === 'suspended') {
+            await context.resume();
+          }
+
+          const now = context.currentTime;
+          const sequence = [880, 1174, 1568];
+
+          sequence.forEach((frequency, index) => {
+            const start = now + index * 0.22;
+            const oscillator = context.createOscillator();
+            const gain = context.createGain();
+
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(frequency, start);
+
+            gain.gain.setValueAtTime(0.0001, start);
+            gain.gain.exponentialRampToValueAtTime(0.18, start + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.18);
+
+            oscillator.connect(gain);
+            gain.connect(context.destination);
+            oscillator.start(start);
+            oscillator.stop(start + 0.2);
+          });
+
+          return true;
+        } catch (_) {
+          return false;
+        }
+      };
+
+      const stopAlarmLoop = () => {
+        if (!alarmLoop) return;
+
+        window.clearInterval(alarmLoop);
+        alarmLoop = null;
+      };
+
+      const startAlarmLoop = async (timerState) => {
+        stopAlarmLoop();
+
+        const playCycle = async () => {
+          const didRing = await ringTimer();
+
+          if (!didRing) {
+            setNote(`${timerState.label} finished.`);
+          }
+        };
+
+        await playCycle();
+        alarmLoop = window.setInterval(playCycle, 1800);
+      };
+
+      const speakTimerComplete = (label) => {
+        if (!('speechSynthesis' in window) || typeof window.SpeechSynthesisUtterance !== 'function') {
+          return false;
+        }
+
+        try {
+          const utterance = new SpeechSynthesisUtterance(`${label} timer is done.`);
+          utterance.rate = 1;
+          utterance.pitch = 1;
+          utterance.volume = 1;
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.speak(utterance);
+          return true;
+        } catch (_) {
+          return false;
+        }
+      };
+
+      const announceTimerComplete = async (timerState) => {
+        const [rang, spoke] = await Promise.allSettled([
+          startAlarmLoop(timerState),
+          Promise.resolve(speakTimerComplete(timerState.label))
+        ]);
+
+        const didRing = rang.status === 'fulfilled';
+        const didSpeak = spoke.status === 'fulfilled' && spoke.value;
+
+        if (!didRing && !didSpeak) {
+          setNote(`${timerState.label} finished.`);
+        }
+      };
+
+      const ensureTimerTick = () => {
+        if (timerTick) return;
+
+        timerTick = window.setInterval(() => {
+          let hasRunningTimer = false;
+
+          timersByStep.forEach((timerState) => {
+            if (!timerState.isRunning) return;
+
+            hasRunningTimer = true;
+            const remainingSeconds = Math.max(0, Math.ceil((timerState.endsAt - Date.now()) / 1000));
+            timerState.remainingSeconds = remainingSeconds;
+            timerState.display.textContent = formatDuration(remainingSeconds);
+
+            if (remainingSeconds === 0) {
+              timerState.isRunning = false;
+              timerState.isAlarmActive = true;
+              timerState.element.classList.add('is-finished');
+              timerState.startButton.textContent = 'Start again';
+              renderTimerState(timerState);
+              announceTimerComplete(timerState);
+            }
+          });
+
+          if (!hasRunningTimer) {
+            window.clearInterval(timerTick);
+            timerTick = null;
+          }
+        }, 250);
+      };
+
+      const renderTimerState = (timerState) => {
+        timerState.display.textContent = formatDuration(timerState.remainingSeconds);
+        timerState.element.classList.toggle('is-running', timerState.isRunning);
+        timerState.element.classList.toggle('is-finished', !timerState.isRunning && timerState.remainingSeconds === 0);
+        timerState.element.classList.toggle('is-alarming', timerState.isAlarmActive);
+        timerState.resetButton.hidden = !timerState.isRunning && timerState.remainingSeconds === 0;
+        timerState.resetButton.disabled = timerState.isRunning && timerState.remainingSeconds === timerState.durationSeconds;
+        timerState.stopButton.hidden = !timerState.isAlarmActive;
+
+        if (timerState.isRunning) {
+          timerState.startButton.textContent = 'Pause';
+        } else if (timerState.remainingSeconds === 0) {
+          timerState.startButton.textContent = 'Start again';
+        } else if (timerState.remainingSeconds !== timerState.durationSeconds) {
+          timerState.startButton.textContent = 'Resume';
+        } else {
+          timerState.startButton.textContent = 'Start';
+        }
+      };
+
+      const startTimer = async (timerState) => {
+        if (timerState.remainingSeconds === 0) {
+          timerState.remainingSeconds = timerState.durationSeconds;
+        }
+
+        timerState.isAlarmActive = false;
+        stopAlarmLoop();
+        timerState.isRunning = true;
+        timerState.element.classList.remove('is-finished');
+        timerState.endsAt = Date.now() + timerState.remainingSeconds * 1000;
+        renderTimerState(timerState);
+        ensureTimerTick();
+      };
+
+      const pauseTimer = (timerState) => {
+        if (!timerState.isRunning) return;
+
+        timerState.remainingSeconds = Math.max(0, Math.ceil((timerState.endsAt - Date.now()) / 1000));
+        timerState.isRunning = false;
+        renderTimerState(timerState);
+      };
+
+      const stopTimerAlarm = (timerState) => {
+        timerState.isAlarmActive = false;
+        stopAlarmLoop();
+        renderTimerState(timerState);
+      };
+
+      const resetTimer = (timerState) => {
+        timerState.isRunning = false;
+        timerState.isAlarmActive = false;
+        timerState.remainingSeconds = timerState.durationSeconds;
+        timerState.element.classList.remove('is-finished');
+        stopAlarmLoop();
+        renderTimerState(timerState);
+      };
+
+      const syncSteps = () => {
+        if (steps.length === 0) return;
+
+        steps.forEach((step, index) => {
+          const isActive = cookModeEnabled && index === activeStepIndex;
+          const isDimmed = cookModeEnabled && index !== activeStepIndex;
+
+          step.classList.toggle('is-active-step', isActive);
+          step.classList.toggle('is-dimmed-step', isDimmed);
+          step.setAttribute('aria-current', isActive ? 'step' : 'false');
+        });
+      };
+
+      const syncUI = () => {
+        article.classList.toggle('is-cook-mode', cookModeEnabled);
+        toggle.classList.toggle('is-active', cookModeEnabled);
+        toggle.setAttribute('aria-pressed', cookModeEnabled ? 'true' : 'false');
+        toggle.textContent = cookModeEnabled ? 'Turn off' : 'Turn on';
+        syncSteps();
+
+        if (!cookModeEnabled) {
+          setNote('Keeps the screen on while you cook when the browser supports it.');
+          return;
+        }
+
+        setNote(
+          wakeLockSupported
+            ? 'Cook mode is on. The screen will stay awake while this tab remains active.'
+            : 'Cook mode is on, but this browser does not support keeping the screen awake automatically.'
+        );
+      };
+
+      const releaseWakeLock = async () => {
+        if (!wakeLock) return;
+
+        try {
+          await wakeLock.release();
+        } catch (_) {
+          // Ignore release failures when the lock has already been dropped.
+        }
+
+        wakeLock = null;
+      };
+
+      const requestWakeLock = async () => {
+        if (!wakeLockSupported || !cookModeEnabled || document.visibilityState !== 'visible') return;
+
+        try {
+          wakeLock = await navigator.wakeLock.request('screen');
+          wakeLock.addEventListener('release', () => {
+            wakeLock = null;
+
+            if (cookModeEnabled && document.visibilityState === 'visible') {
+              requestWakeLock();
+            }
+          });
+        } catch (_) {
+          setNote('Cook mode is on, but the browser blocked the screen wake lock for this tab.');
+        }
+      };
+
+      const setCookMode = async (enabled) => {
+        cookModeEnabled = enabled;
+        window.localStorage.setItem(storageKey, enabled ? 'on' : 'off');
+
+        if (enabled && steps.length > 0 && !steps[activeStepIndex]) {
+          activeStepIndex = 0;
+        }
+
+        syncUI();
+
+        if (enabled) {
+          await requestWakeLock();
+          return;
+        }
+
+        await releaseWakeLock();
+      };
+
+      toggle.addEventListener('click', () => {
+        setCookMode(!cookModeEnabled);
+      });
+
+      if (instructionList && steps.length > 0) {
+        instructionList.classList.add('recipe-steps-list');
+
+        steps.forEach((step, index) => {
+          step.classList.add('recipe-step-item');
+          step.tabIndex = 0;
+          step.setAttribute('role', 'button');
+          step.setAttribute('aria-label', `Focus step ${index + 1}`);
+
+          step.addEventListener('click', () => {
+            activeStepIndex = index;
+            syncSteps();
+          });
+
+          step.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+
+            event.preventDefault();
+            activeStepIndex = index;
+            syncSteps();
+          });
+        });
+
+        timerConfigs.forEach((config) => {
+          const step = steps[config.stepIndex];
+          if (!step) return;
+
+          const timer = document.createElement('div');
+          timer.className = 'recipe-step-timer';
+
+          const timerLabel = document.createElement('div');
+          timerLabel.className = 'recipe-step-timer-label';
+          timerLabel.textContent = config.label;
+
+          const timerDisplay = document.createElement('div');
+          timerDisplay.className = 'recipe-step-timer-display';
+
+          const timerActions = document.createElement('div');
+          timerActions.className = 'recipe-step-timer-actions';
+
+          const startButton = document.createElement('button');
+          startButton.type = 'button';
+          startButton.className = 'recipe-step-timer-btn is-primary';
+
+          const resetButton = document.createElement('button');
+          resetButton.type = 'button';
+          resetButton.className = 'recipe-step-timer-btn';
+          resetButton.textContent = 'Reset';
+
+          const stopButton = document.createElement('button');
+          stopButton.type = 'button';
+          stopButton.className = 'recipe-step-timer-btn is-alert';
+          stopButton.textContent = 'Stop alarm';
+          stopButton.hidden = true;
+
+          timerActions.append(startButton, resetButton, stopButton);
+          timer.append(timerLabel, timerDisplay, timerActions);
+          step.append(timer);
+
+          const timerState = {
+            durationSeconds: config.durationSeconds,
+            display: timerDisplay,
+            element: timer,
+            endsAt: null,
+            isAlarmActive: false,
+            isRunning: false,
+            label: config.label,
+            remainingSeconds: config.durationSeconds,
+            resetButton,
+            startButton,
+            stopButton
+          };
+
+          startButton.addEventListener('click', async (event) => {
+            event.stopPropagation();
+
+            if (timerState.isRunning) {
+              pauseTimer(timerState);
+              return;
+            }
+
+            await startTimer(timerState);
+          });
+
+          resetButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            resetTimer(timerState);
+          });
+
+          stopButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            stopTimerAlarm(timerState);
+          });
+
+          timersByStep.set(config.stepIndex, timerState);
+          renderTimerState(timerState);
+        });
+      }
+
+      document.addEventListener('visibilitychange', () => {
+        if (!cookModeEnabled) return;
+
+        if (document.visibilityState === 'visible') {
+          requestWakeLock();
+        } else {
+          releaseWakeLock();
+        }
+      });
+
+      const preferredState = window.localStorage.getItem(storageKey) === 'on';
+      syncUI();
+
+      if (preferredState) {
+        setCookMode(true);
+      }
+    };
+
+    window.addEventListener('load', initRecipeCookMode);
+  })();
+</script>

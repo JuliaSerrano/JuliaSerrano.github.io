@@ -8,13 +8,17 @@ tail_includes:
 script_includes:
   - comment
   - recipe-servings
+  - recipe-cook-mode
 ---
 
 {% include lang.html %}
 
 {% include toc-status.html %}
 
-<article class="px-1" data-toc="{{ enable_toc }}">
+<article class="px-1" data-toc="{{ enable_toc }}" data-recipe-article>
+  {% if page.step_timers %}
+    <script type="application/json" data-recipe-step-timers>{{ page.step_timers | jsonify }}</script>
+  {% endif %}
   <header>
     <h1 data-toc-skip>{{ page.title }}</h1>
     {% if page.description %}
@@ -196,6 +200,24 @@ script_includes:
   {% endif %}
 
   <div class="content">
+    <div class="recipe-cook-mode-bar mb-4" data-cook-mode-bar>
+      <div class="recipe-cook-mode-copy">
+        <span class="recipe-meta-label">Cook mode</span>
+        <strong class="recipe-cook-mode-title">Keep this recipe awake</strong>
+        <p class="recipe-cook-mode-note mb-0" data-cook-mode-note>
+          Keeps the screen on while you cook when the browser supports it.
+        </p>
+      </div>
+      <button
+        type="button"
+        class="recipe-cook-mode-toggle"
+        data-cook-mode-toggle
+        aria-pressed="false"
+      >
+        Turn on
+      </button>
+    </div>
+
     {% if page.ingredients %}
       <section
         class="recipe-section"
@@ -231,28 +253,35 @@ script_includes:
         <ul class="recipe-ingredients-list">
           {% for ingredient in page.ingredients %}
             <li class="recipe-ingredient">
-              {% if ingredient.name %}
-                {% if ingredient.quantity %}
-                  <span
-                    class="recipe-ingredient-quantity"
-                    data-base-quantity="{{ ingredient.quantity }}"
-                  >
-                    {{ ingredient.quantity }}
-                  </span>
-                {% endif %}
+              <input
+                class="recipe-ingredient-checkbox"
+                type="checkbox"
+                id="recipe-ingredient-{{ forloop.index }}"
+              >
+              <label class="recipe-ingredient-label" for="recipe-ingredient-{{ forloop.index }}">
+                {% if ingredient.name %}
+                  {% if ingredient.quantity %}
+                    <span
+                      class="recipe-ingredient-quantity"
+                      data-base-quantity="{{ ingredient.quantity }}"
+                    >
+                      {{ ingredient.quantity }}
+                    </span>
+                  {% endif %}
 
-                {% if ingredient.unit %}
-                  <span class="recipe-ingredient-unit">{{ ingredient.unit }}</span>
-                {% endif %}
+                  {% if ingredient.unit %}
+                    <span class="recipe-ingredient-unit">{% if ingredient.quantity %} {% endif %}{{ ingredient.unit }}</span>
+                  {% endif %}
 
-                <span class="recipe-ingredient-name">{{ ingredient.name }}</span>
+                  <span class="recipe-ingredient-name">{% if ingredient.quantity or ingredient.unit %} {% endif %}{{ ingredient.name }}</span>
 
-                {% if ingredient.notes %}
-                  <span class="recipe-ingredient-notes">, {{ ingredient.notes }}</span>
+                  {% if ingredient.notes %}
+                    <span class="recipe-ingredient-notes">, {{ ingredient.notes }}</span>
+                  {% endif %}
+                {% else %}
+                  {{ ingredient }}
                 {% endif %}
-              {% else %}
-                {{ ingredient }}
-              {% endif %}
+              </label>
             </li>
           {% endfor %}
         </ul>

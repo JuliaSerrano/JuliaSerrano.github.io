@@ -23,21 +23,92 @@
 }
 
 .recipe-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  justify-content: center;
   padding: 0.9rem 1rem;
   border: 1px solid var(--main-border-color);
   border-radius: 10px;
   background: var(--card-bg);
 }
 
+.recipe-meta-item strong {
+  display: block;
+  color: var(--heading-color);
+  font-size: 1.15rem;
+  line-height: 1.35;
+}
+
 .recipe-meta-label {
+  display: block;
   color: var(--text-muted-color);
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
+@media (min-width: 768px) {
+  .recipe-meta-grid {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+}
+
 .recipe-section {
   margin-bottom: 2rem;
+}
+
+.recipe-cook-mode-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--main-border-color);
+  border-radius: 14px;
+  background: var(--main-bg);
+  background-image: none;
+}
+
+.recipe-cook-mode-copy {
+  min-width: 0;
+}
+
+.recipe-cook-mode-title {
+  display: block;
+  color: var(--heading-color);
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.recipe-cook-mode-note {
+  margin-top: 0.2rem;
+  color: var(--text-muted-color);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.recipe-cook-mode-toggle {
+  flex: 0 0 auto;
+  border: 1px solid var(--btn-border-color);
+  background: var(--card-bg);
+  color: var(--text-color);
+  border-radius: 999px;
+  padding: 0.6rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.recipe-cook-mode-toggle:hover {
+  background: var(--sidebar-hover-bg);
+  color: var(--heading-color);
+}
+
+.recipe-cook-mode-toggle.is-active {
+  border-color: var(--input-focus-border-color);
+  background: var(--sidebar-hover-bg);
+  color: var(--heading-color);
 }
 
 .recipe-servings-control {
@@ -114,17 +185,222 @@
 }
 
 .recipe-ingredients-list {
-  padding-left: 1.25rem;
+  list-style: none;
+  padding-left: 0;
+}
+
+.recipe-ingredient {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  margin-bottom: 0.75rem;
+}
+
+.recipe-ingredient-checkbox {
+  flex: 0 0 auto;
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.3rem;
+  accent-color: var(--link-color);
+  cursor: pointer;
+}
+
+.recipe-ingredient-label {
+  flex: 1 1 auto;
+  margin: 0;
+  cursor: pointer;
+}
+
+.recipe-ingredient-checkbox:checked + .recipe-ingredient-label {
+  color: var(--text-muted-color);
+  text-decoration: line-through;
 }
 
 .recipe-ingredient-quantity {
   font-weight: 700;
 }
 
-.recipe-ingredient-unit,
-.recipe-ingredient-name,
-.recipe-ingredient-notes {
-  margin-left: 0.2rem;
+.recipe-steps-list {
+  padding-left: 1.4rem;
+}
+
+.recipe-step-item {
+  border-radius: 14px;
+  transition:
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.recipe-step-item:focus-visible {
+  outline: 2px solid var(--input-focus-border-color);
+  outline-offset: 4px;
+}
+
+.recipe-step-timer {
+  margin-top: 0.9rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--main-border-color);
+  border-radius: 12px;
+  background: var(--main-bg);
+  background-image: none;
+}
+
+.recipe-step-timer.is-running {
+  border-color: var(--input-focus-border-color);
+}
+
+.recipe-step-timer.is-finished {
+  border-color: var(--link-color);
+}
+
+.recipe-step-timer.is-alarming {
+  border-color: #d97706;
+  background: color-mix(in srgb, var(--card-bg) 82%, #d97706 18%);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, #d97706 40%, transparent),
+    0 0 28px color-mix(in srgb, #d97706 28%, transparent);
+  animation: recipe-timer-alarm-pulse 1.2s ease-in-out infinite;
+}
+
+.recipe-step-timer-label {
+  color: var(--text-muted-color);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.recipe-step-timer-display {
+  margin-top: 0.2rem;
+  color: var(--heading-color);
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.recipe-step-timer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.recipe-step-timer-btn {
+  border: 1px solid var(--btn-border-color);
+  background: var(--card-bg);
+  color: var(--text-color);
+  border-radius: 999px;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.recipe-step-timer-btn:hover {
+  background: var(--sidebar-hover-bg);
+  color: var(--heading-color);
+}
+
+.recipe-step-timer-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.recipe-step-timer-btn.is-primary {
+  border-color: var(--input-focus-border-color);
+}
+
+.recipe-step-timer-btn.is-alert {
+  border-color: #d97706;
+  color: var(--heading-color);
+}
+
+.recipe-step-timer-btn.is-alert:hover {
+  background: color-mix(in srgb, var(--card-bg) 70%, #d97706 30%);
+}
+
+@keyframes recipe-timer-alarm-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, #d97706 40%, transparent),
+      0 0 20px color-mix(in srgb, #d97706 20%, transparent);
+  }
+
+  50% {
+    transform: scale(1.015);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, #d97706 55%, transparent),
+      0 0 34px color-mix(in srgb, #d97706 38%, transparent);
+  }
+}
+
+[data-recipe-article].is-cook-mode .recipe-cook-mode-bar {
+  position: sticky;
+  top: 1rem;
+  z-index: 5;
+  isolation: isolate;
+  box-shadow: var(--card-shadow);
+}
+
+[data-recipe-article].is-cook-mode .content {
+  font-size: 1.08rem;
+  line-height: 1.85;
+}
+
+[data-recipe-article].is-cook-mode .content h2,
+[data-recipe-article].is-cook-mode .content h3 {
+  line-height: 1.3;
+}
+
+[data-recipe-article].is-cook-mode .recipe-ingredient {
+  margin-bottom: 1rem;
+}
+
+[data-recipe-article].is-cook-mode .recipe-ingredient-checkbox {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+[data-recipe-article].is-cook-mode .recipe-steps-list {
+  padding-left: 0;
+  list-style-position: inside;
+}
+
+[data-recipe-article].is-cook-mode .recipe-step-item {
+  cursor: pointer;
+  margin-bottom: 0.9rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid transparent;
+  background: var(--main-bg);
+  background-image: none;
+}
+
+[data-recipe-article].is-cook-mode .recipe-step-item.is-active-step {
+  border-color: var(--input-focus-border-color);
+  background: var(--main-bg);
+  background-image: none;
+  box-shadow: var(--card-shadow);
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+[data-recipe-article].is-cook-mode .recipe-step-item.is-dimmed-step {
+  opacity: 0.42;
+}
+
+@media (max-width: 767.98px) {
+  .recipe-cook-mode-bar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .recipe-cook-mode-toggle {
+    width: 100%;
+  }
 }
 
 .all-tags-link {
