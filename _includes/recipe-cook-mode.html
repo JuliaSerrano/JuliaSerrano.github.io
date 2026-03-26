@@ -1,8 +1,9 @@
 <script>
   (() => {
     const storagePrefix = 'recipe-cook-mode:';
-    const stepHeadingPattern = /^(method|instructions|directions|steps|preparation)$/i;
-    const durationPattern = /(\d+(?:\.\d+)?)\s*(h|hr|hrs|hour|hours|m|min|mins|minute|minutes|s|sec|secs|second|seconds)/gi;
+    const stepHeadingPattern = /^(method|instructions|directions|steps|preparation|preparacion|preparación|m[eé]todo)$/i;
+    const durationPattern =
+      /(\d+(?:\.\d+)?)\s*(h|hr|hrs|hour|hours|hora|horas|m|min|mins|minute|minutes|minuto|minutos|s|sec|secs|second|seconds|seg|segs|segundo|segundos)/gi;
 
     const initRecipeCookMode = () => {
       const article = document.querySelector('[data-recipe-article]');
@@ -13,6 +14,7 @@
       if (!article || !toggle || !note) return;
 
       const storageKey = `${storagePrefix}${window.location.pathname}`;
+      const speechLang = document.documentElement.lang || 'en';
       const wakeLockSupported = 'wakeLock' in navigator && typeof navigator.wakeLock.request === 'function';
       let wakeLock = null;
       let cookModeEnabled = false;
@@ -210,6 +212,7 @@
 
         try {
           const utterance = new SpeechSynthesisUtterance(`${label} timer is done.`);
+          utterance.lang = speechLang;
           utterance.rate = 1;
           utterance.pitch = 1;
           utterance.volume = 1;

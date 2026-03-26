@@ -276,7 +276,7 @@ script_includes:
                   <span class="recipe-ingredient-name">{% if ingredient.quantity or ingredient.unit %} {% endif %}{{ ingredient.name }}</span>
 
                   {% if ingredient.notes %}
-                    <span class="recipe-ingredient-notes">, {{ ingredient.notes }}</span>
+                    <span class="recipe-ingredient-notes"> ({{ ingredient.notes }})</span>
                   {% endif %}
                 {% else %}
                   {{ ingredient }}
