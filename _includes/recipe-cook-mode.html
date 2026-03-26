@@ -363,9 +363,7 @@
 
         try {
           await wakeLock.release();
-        } catch (_) {
-          // Ignore release failures when the lock has already been dropped.
-        }
+        } catch (_) {}
 
         wakeLock = null;
       };
